@@ -209,8 +209,9 @@ export default function Home() {
             right: 0 !important;
             z-index: 1000 !important;
             padding: 0.75rem 1rem !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
-            background-color: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+            background-color: #000000 !important; /* 黑色背景 */
+            color: #ffffff !important; /* 白色文字 */
           }
           
           .copilot-chat {
@@ -277,8 +278,12 @@ export default function Home() {
           left: isMobile ? 0 : 'auto',
           right: isMobile ? 0 : 'auto',
           zIndex: isMobile ? 1000 : 'auto',
+          backgroundColor: '#000000', // 黑色背景
         }}>
-          <h1 style={styles.title}>MA-1 AI</h1>
+          <h1 style={{
+            ...styles.title,
+            color: '#ffffff' // 白色文字
+          }}>MA-1</h1>
         </header>
 
         <main style={{
@@ -526,9 +531,6 @@ const styles = {
     display: "flex",
     flexDirection: "row" as const,
     height: "calc(100vh - 120px)", // Adjust based on header and footer height
-    "@media (max-width: 768px)": {
-      flexDirection: "column" as const,
-    }
   },
   // Left column - Chat
   chatColumn: {
@@ -537,12 +539,6 @@ const styles = {
     borderRight: "1px solid #eaeaea",
     display: "flex",
     flexDirection: "column" as const,
-    "@media (max-width: 768px)": {
-      width: "100%",
-      borderRight: "none",
-      borderBottom: "1px solid #eaeaea",
-      height: "50vh", // 在移动设备上占据页面高度的一半
-    }
   },
   chatContainer: {
     flex: 1,
@@ -561,10 +557,6 @@ const styles = {
     width: "60%",
     display: "flex",
     flexDirection: "column" as const,
-    "@media (max-width: 768px)": {
-      width: "100%",
-      height: "50vh", // 在移动设备上占据页面高度的一半
-    }
   },
   workspaceHeader: {
     padding: "1rem",
