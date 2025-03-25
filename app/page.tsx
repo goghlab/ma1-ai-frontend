@@ -543,7 +543,7 @@ export default function Home() {
             ...styles.footerText,
             color: '#888888',
             fontSize: '0.75rem',
-          }}>Powered by xAI</p>
+          }}>Powered by goghlab</p>
         </footer>
       </div>
     </>
