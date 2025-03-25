@@ -279,11 +279,46 @@ export default function Home() {
           right: isMobile ? 0 : 'auto',
           zIndex: isMobile ? 1000 : 'auto',
           backgroundColor: '#000000', // 黑色背景
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0.75rem 1rem',
         }}>
-          <h1 style={{
-            ...styles.title,
-            color: '#ffffff' // 白色文字
-          }}>MA-1</h1>
+          <div style={{
+            height: '28px',
+            width: '28px',
+            marginRight: '8px',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{
+              position: 'absolute',
+              height: '24px',
+              width: '24px',
+              overflow: 'hidden',
+              clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+            }}>
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(135deg, #d4d4d8 0%, #71717a 100%)'
+              }}></div>
+            </div>
+          </div>
+          <span style={{
+            fontSize: '1.125rem',
+            fontFamily: 'monospace',
+            letterSpacing: '0.2em',
+            position: 'relative',
+            zIndex: 10,
+            color: '#d4d4d8',
+            textTransform: 'uppercase',
+            fontWeight: 300
+          }}>
+            MA-1
+          </span>
         </header>
 
         <main style={{
@@ -498,8 +533,17 @@ export default function Home() {
           </div>
         </main>
 
-        <footer style={styles.footer}>
-          <p style={styles.footerText}>Powered by xAI</p>
+        <footer style={{
+          ...styles.footer,
+          backgroundColor: '#000000',
+          borderTop: '1px solid #222222',
+          padding: '0.75rem',
+        }}>
+          <p style={{
+            ...styles.footerText,
+            color: '#888888',
+            fontSize: '0.75rem',
+          }}>Powered by xAI</p>
         </footer>
       </div>
     </>
@@ -557,6 +601,10 @@ const styles = {
     width: "60%",
     display: "flex",
     flexDirection: "column" as const,
+    "@media (max-width: 768px)": {
+      width: "100%",
+      height: "50vh", // 在移动设备上占据页面高度的一半
+    }
   },
   workspaceHeader: {
     padding: "1rem",
