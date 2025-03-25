@@ -1,16 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const { ChatXAI } = require('@langchain/xai');
+const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 // 中间件
+app.use(cors());
 app.use(express.json());
 
 const llm = new ChatXAI({
   apiKey: process.env.XAI_API_KEY,
-  model: "grok",
 });
 
 // 定义/api/chat端点
