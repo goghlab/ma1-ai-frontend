@@ -15,7 +15,7 @@ export default function ClientCopilotChat({ instructions, botMessage }: ClientCo
   const apiKey = process.env.NEXT_PUBLIC_COPILOT_API_KEY || "ck_pub_4ecb04ac2a37c735196d99b608b31919";
   
   return (
-    <div className="flex-1 h-full w-full flex bg-black">
+    <div className="flex-1 h-full w-full flex flex-col bg-black">
       <div className="w-full h-full bg-black border border-gray-800 rounded-md overflow-hidden">
         <CopilotKit publicApiKey={apiKey}>
           <CopilotChat 
@@ -172,6 +172,75 @@ export default function ClientCopilotChat({ instructions, botMessage }: ClientCo
         
         .copilot-chat button:hover {
           background-color: #374151 !important;
+        }
+        
+        /* 移动设备响应式设计 */
+        @media (max-width: 768px) {
+          /* 确保聊天区域显示在顶部 */
+          .copilot-chat {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100% !important;
+          }
+          
+          /* 调整消息容器高度，确保占据足够空间 */
+          .copilot-chat-messages-container {
+            flex: 1 !important;
+            height: auto !important;
+            max-height: 60vh !important;
+            overflow-y: auto !important;
+          }
+          
+          /* 工作面板（如有）显示在下方 */
+          .copilot-chat-panel {
+            order: 2 !important;
+            margin-top: auto !important;
+          }
+          
+          /* 输入区域固定在底部 */
+          .copilot-chat-input-container {
+            order: 3 !important;
+            position: sticky !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            z-index: 10 !important;
+          }
+          
+          /* 优化消息气泡在移动设备上的显示 */
+          .copilot-chat-message-user,
+          .copilot-chat-message-assistant {
+            max-width: 90% !important;
+          }
+          
+          /* 头部标题调整 */
+          .copilot-chat-header {
+            padding: 12px !important;
+          }
+          
+          .copilot-chat-header-title {
+            font-size: 16px !important;
+          }
+        }
+        
+        /* 小屏幕设备的进一步优化 */
+        @media (max-width: 480px) {
+          .copilot-chat-messages-container {
+            padding: 10px !important;
+          }
+          
+          .copilot-chat-message-user,
+          .copilot-chat-message-assistant {
+            padding: 10px !important;
+            margin: 6px 0 !important;
+          }
+          
+          .copilot-chat-input-container {
+            padding: 8px 10px !important;
+          }
+          
+          .copilot-chat-input {
+            padding: 8px !important;
+          }
         }
       `}</style>
     </div>
