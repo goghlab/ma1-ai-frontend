@@ -61,6 +61,36 @@ export default function Home() {
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // 检测窗口大小变化
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
+    // 初始检查
+    checkIsMobile()
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', checkIsMobile)
+    
+    // 清理监听器
+    return () => window.removeEventListener('resize', checkIsMobile)
+  }, [])
+
+  // 设置移动设备的viewport
+  useEffect(() => {
+    // 移动设备优化：禁止用户缩放以避免缩放导致的布局问题
+    const meta = document.createElement('meta')
+    meta.name = 'viewport'
+    meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
+    document.head.appendChild(meta)
+
+    return () => {
+      document.head.removeChild(meta)
+    }
+  }, [])
 
   // Load dummy campaign on initial render
   useEffect(() => {
@@ -163,202 +193,245 @@ export default function Home() {
   }
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>MA-1 AI</h1>
-      </header>
+    <>
+      <style jsx global>{`
+        /* 移动设备响应式样式 */
+        @media (max-width: 768px) {
+          body {
+            overflow: hidden;
+          }
+          
+          .copilot-chat-messages-container {
+            max-height: 30vh !important;
+          }
+          
+          .copilot-chat-input-container {
+            padding: 8px !important;
+          }
+          
+          .copilot-chat-input {
+            max-height: 80px !important;
+            overflow-y: auto !important;
+          }
+        }
+      `}</style>
+      
+      <div style={styles.container}>
+        <header style={styles.header}>
+          <h1 style={styles.title}>MA-1 AI</h1>
+        </header>
 
-      <main style={styles.main}>
-        {/* Left column - Chat interface */}
-        <div style={styles.chatColumn}>
-          {isLoading && (
-            <div style={styles.loadingOverlay}>
-              <p>Generating campaign...</p>
-            </div>
-          )}
-          {error && (
-            <div style={styles.errorMessage}>
-              <p>{error}</p>
-              <button onClick={() => setError(null)} style={styles.errorDismissButton}>
-                Dismiss
-              </button>
-            </div>
-          )}
-          <CopilotKit runtimeUrl="http://localhost:3001/api">
-            <div style={styles.chatContainer}>
-              <ClientCopilotChat
-                instructions="Send campaign requests to /api/campaign. For general chat, use /api/chat."
-              />
-            </div>
-          </CopilotKit>
-        </div>
-
-        {/* Right column - Workspace for campaigns */}
-        <div style={styles.workspaceColumn}>
-          <div style={styles.workspaceHeader}>
-            <h2 style={styles.workspaceTitle}>Campaigns</h2>
-          </div>
-
-          <div style={styles.workspaceContent}>
-            {campaigns.length === 0 ? (
-              <div style={styles.emptyState}>
-                <MessageSquare size={48} color="#ccc" />
-                <p style={styles.emptyStateText}>No campaigns yet. Start a conversation to create one!</p>
-              </div>
-            ) : (
-              <div style={styles.campaignsList}>
-                {campaigns.map((campaign) => (
-                  <div key={campaign.id} style={styles.campaignPanel}>
-                    {/* Campaign header - always visible */}
-                    <div style={styles.campaignHeader} onClick={() => toggleCampaignExpansion(campaign.id)}>
-                      <div style={styles.campaignHeaderLeft}>
-                        {expandedCampaignId === campaign.id ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                        <h3 style={styles.campaignTitle}>{campaign.title}</h3>
-                      </div>
-                      <div style={styles.campaignHeaderRight}>
-                        <div style={styles.platformIcons}>
-                          {campaign.platforms.map((platform) => (
-                            <span key={platform} style={styles.platformIcon}>
-                              {getPlatformIcon(platform)}
-                            </span>
-                          ))}
-                        </div>
-                        {campaign.scheduledDate && (
-                          <span style={styles.scheduledBadge}>
-                            <Clock size={14} />
-                            <span style={styles.scheduledText}>Scheduled</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Campaign details - visible when expanded */}
-                    {expandedCampaignId === campaign.id && (
-                      <div style={styles.campaignDetails}>
-                        <div style={styles.campaignActions}>
-                          <button style={styles.editButton} onClick={toggleEditMode}>
-                            <Edit size={14} />
-                            {isEditing ? "Save Changes" : "Edit Campaign"}
-                          </button>
-                        </div>
-
-                        <div style={styles.campaignMetadata}>
-                          <div style={styles.metadataItem}>
-                            <span style={styles.metadataLabel}>Platforms:</span>
-                            <div style={styles.platformsContainer}>
-                              {campaign.platforms.map((platform) => (
-                                <span key={platform} style={styles.platformBadge}>
-                                  {getPlatformIcon(platform)}
-                                  <span style={styles.platformName}>{platform}</span>
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          {campaign.targetAudience && (
-                            <div style={styles.metadataItem}>
-                              <span style={styles.metadataLabel}>Target Audience:</span>
-                              <span>{campaign.targetAudience}</span>
-                            </div>
-                          )}
-
-                          {campaign.scheduledDate && campaign.scheduledDate !== "Not scheduled" && (
-                            <div style={styles.metadataItem}>
-                              <span style={styles.metadataLabel}>Scheduled Date:</span>
-                              <span style={styles.scheduledDate}>
-                                <Calendar size={14} />
-                                {campaign.scheduledDate}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div style={styles.contentSection}>
-                          <h3 style={styles.contentTitle}>Campaign Content</h3>
-
-                          {parsePosts(campaign.content).map((post, index) => (
-                            <div
-                              key={index}
-                              style={index > 0 ? { ...styles.post, ...styles.postDivider } : styles.post}
-                            >
-                              <div style={styles.postHeader}>
-                                <span style={styles.postNumber}>Post {index + 1}</span>
-                              </div>
-
-                              {/* Image upload area */}
-                              {post.imageDescription && (
-                                <div style={styles.imageUploadContainer}>
-                                  {campaign.images && campaign.images[index.toString()] ? (
-                                    <div style={styles.imagePreviewContainer}>
-                                      <img
-                                        src={campaign.images[index.toString()] || "/placeholder.svg"}
-                                        alt={post.imageDescription}
-                                        style={styles.imagePreview}
-                                      />
-                                      {isEditing && (
-                                        <label
-                                          htmlFor={`image-upload-${campaign.id}-${index}`}
-                                          style={styles.changeImageButton}
-                                        >
-                                          Change Image
-                                        </label>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <label
-                                      htmlFor={`image-upload-${campaign.id}-${index}`}
-                                      style={{
-                                        ...styles.imageUploadArea,
-                                        ...(isEditing ? {} : styles.disabledUpload),
-                                      }}
-                                    >
-                                      <div style={styles.imageUploadContent}>
-                                        <ImageIcon size={32} color="#999" />
-                                        <p style={styles.imageUploadText}>Upload image</p>
-                                        <p style={styles.imageDescription}>{post.imageDescription}</p>
-                                        {isEditing && (
-                                          <div style={styles.uploadButtonContainer}>
-                                            <span style={styles.uploadButton}>
-                                              <Upload size={14} />
-                                              Select Image
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </label>
-                                  )}
-                                  {isEditing && (
-                                    <input
-                                      id={`image-upload-${campaign.id}-${index}`}
-                                      type="file"
-                                      accept="image/*"
-                                      onChange={(e) => handleImageUpload(campaign.id, index, e)}
-                                      style={styles.hiddenInput}
-                                      disabled={!isEditing}
-                                    />
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Post content */}
-                              <div style={styles.postContent}>{post.content}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+        <main style={{
+          ...styles.main,
+          flexDirection: isMobile ? 'column' : 'row'
+        }}>
+          {/* Chat interface */}
+          <div style={{
+            ...styles.chatColumn,
+            width: isMobile ? '100%' : '40%',
+            borderRight: isMobile ? 'none' : '1px solid #eaeaea',
+            borderBottom: isMobile ? '1px solid #eaeaea' : 'none',
+            height: isMobile ? '40vh' : 'auto',
+            minHeight: isMobile ? '300px' : 'auto',
+            overflow: 'hidden'
+          }}>
+            {isLoading && (
+              <div style={styles.loadingOverlay}>
+                <p>Generating campaign...</p>
               </div>
             )}
+            {error && (
+              <div style={styles.errorMessage}>
+                <p>{error}</p>
+                <button onClick={() => setError(null)} style={styles.errorDismissButton}>
+                  Dismiss
+                </button>
+              </div>
+            )}
+            <CopilotKit runtimeUrl="http://localhost:3001/api">
+              <div style={{
+                ...styles.chatContainer,
+                height: '100%'
+              }}>
+                <ClientCopilotChat
+                  instructions="Send campaign requests to /api/campaign. For general chat, use /api/chat."
+                />
+              </div>
+            </CopilotKit>
           </div>
-        </div>
-      </main>
 
-      <footer style={styles.footer}>
-        <p style={styles.footerText}>Powered by xAI</p>
-      </footer>
-    </div>
+          {/* Workspace for campaigns */}
+          <div style={{
+            ...styles.workspaceColumn,
+            width: isMobile ? '100%' : '60%',
+            height: isMobile ? '60vh' : 'auto',
+            overflow: 'auto'
+          }}>
+            <div style={styles.workspaceHeader}>
+              <h2 style={styles.workspaceTitle}>Campaigns</h2>
+            </div>
+
+            <div style={styles.workspaceContent}>
+              {campaigns.length === 0 ? (
+                <div style={styles.emptyState}>
+                  <MessageSquare size={48} color="#ccc" />
+                  <p style={styles.emptyStateText}>No campaigns yet. Start a conversation to create one!</p>
+                </div>
+              ) : (
+                <div style={styles.campaignsList}>
+                  {campaigns.map((campaign) => (
+                    <div key={campaign.id} style={styles.campaignPanel}>
+                      {/* Campaign header - always visible */}
+                      <div style={styles.campaignHeader} onClick={() => toggleCampaignExpansion(campaign.id)}>
+                        <div style={styles.campaignHeaderLeft}>
+                          {expandedCampaignId === campaign.id ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                          <h3 style={styles.campaignTitle}>{campaign.title}</h3>
+                        </div>
+                        <div style={styles.campaignHeaderRight}>
+                          <div style={styles.platformIcons}>
+                            {campaign.platforms.map((platform) => (
+                              <span key={platform} style={styles.platformIcon}>
+                                {getPlatformIcon(platform)}
+                              </span>
+                            ))}
+                          </div>
+                          {campaign.scheduledDate && (
+                            <span style={styles.scheduledBadge}>
+                              <Clock size={14} />
+                              <span style={styles.scheduledText}>Scheduled</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Campaign details - visible when expanded */}
+                      {expandedCampaignId === campaign.id && (
+                        <div style={styles.campaignDetails}>
+                          <div style={styles.campaignActions}>
+                            <button style={styles.editButton} onClick={toggleEditMode}>
+                              <Edit size={14} />
+                              {isEditing ? "Save Changes" : "Edit Campaign"}
+                            </button>
+                          </div>
+
+                          <div style={styles.campaignMetadata}>
+                            <div style={styles.metadataItem}>
+                              <span style={styles.metadataLabel}>Platforms:</span>
+                              <div style={styles.platformsContainer}>
+                                {campaign.platforms.map((platform) => (
+                                  <span key={platform} style={styles.platformBadge}>
+                                    {getPlatformIcon(platform)}
+                                    <span style={styles.platformName}>{platform}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            {campaign.targetAudience && (
+                              <div style={styles.metadataItem}>
+                                <span style={styles.metadataLabel}>Target Audience:</span>
+                                <span>{campaign.targetAudience}</span>
+                              </div>
+                            )}
+
+                            {campaign.scheduledDate && campaign.scheduledDate !== "Not scheduled" && (
+                              <div style={styles.metadataItem}>
+                                <span style={styles.metadataLabel}>Scheduled Date:</span>
+                                <span style={styles.scheduledDate}>
+                                  <Calendar size={14} />
+                                  {campaign.scheduledDate}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div style={styles.contentSection}>
+                            <h3 style={styles.contentTitle}>Campaign Content</h3>
+
+                            {parsePosts(campaign.content).map((post, index) => (
+                              <div
+                                key={index}
+                                style={index > 0 ? { ...styles.post, ...styles.postDivider } : styles.post}
+                              >
+                                <div style={styles.postHeader}>
+                                  <span style={styles.postNumber}>Post {index + 1}</span>
+                                </div>
+
+                                {/* Image upload area */}
+                                {post.imageDescription && (
+                                  <div style={styles.imageUploadContainer}>
+                                    {campaign.images && campaign.images[index.toString()] ? (
+                                      <div style={styles.imagePreviewContainer}>
+                                        <img
+                                          src={campaign.images[index.toString()] || "/placeholder.svg"}
+                                          alt={post.imageDescription}
+                                          style={styles.imagePreview}
+                                        />
+                                        {isEditing && (
+                                          <label
+                                            htmlFor={`image-upload-${campaign.id}-${index}`}
+                                            style={styles.changeImageButton}
+                                          >
+                                            Change Image
+                                          </label>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <label
+                                        htmlFor={`image-upload-${campaign.id}-${index}`}
+                                        style={{
+                                          ...styles.imageUploadArea,
+                                          ...(isEditing ? {} : styles.disabledUpload),
+                                        }}
+                                      >
+                                        <div style={styles.imageUploadContent}>
+                                          <ImageIcon size={32} color="#999" />
+                                          <p style={styles.imageUploadText}>Upload image</p>
+                                          <p style={styles.imageDescription}>{post.imageDescription}</p>
+                                          {isEditing && (
+                                            <div style={styles.uploadButtonContainer}>
+                                              <span style={styles.uploadButton}>
+                                                <Upload size={14} />
+                                                Select Image
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </label>
+                                    )}
+                                    {isEditing && (
+                                      <input
+                                        id={`image-upload-${campaign.id}-${index}`}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleImageUpload(campaign.id, index, e)}
+                                        style={styles.hiddenInput}
+                                        disabled={!isEditing}
+                                      />
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Post content */}
+                                <div style={styles.postContent}>{post.content}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+
+        <footer style={styles.footer}>
+          <p style={styles.footerText}>Powered by xAI</p>
+        </footer>
+      </div>
+    </>
   )
 }
 
@@ -387,6 +460,9 @@ const styles = {
     display: "flex",
     flexDirection: "row" as const,
     height: "calc(100vh - 120px)", // Adjust based on header and footer height
+    "@media (max-width: 768px)": {
+      flexDirection: "column" as const,
+    }
   },
   // Left column - Chat
   chatColumn: {
@@ -395,6 +471,12 @@ const styles = {
     borderRight: "1px solid #eaeaea",
     display: "flex",
     flexDirection: "column" as const,
+    "@media (max-width: 768px)": {
+      width: "100%",
+      borderRight: "none",
+      borderBottom: "1px solid #eaeaea",
+      height: "50vh", // 在移动设备上占据页面高度的一半
+    }
   },
   chatContainer: {
     flex: 1,
@@ -413,6 +495,10 @@ const styles = {
     width: "60%",
     display: "flex",
     flexDirection: "column" as const,
+    "@media (max-width: 768px)": {
+      width: "100%",
+      height: "50vh", // 在移动设备上占据页面高度的一半
+    }
   },
   workspaceHeader: {
     padding: "1rem",
