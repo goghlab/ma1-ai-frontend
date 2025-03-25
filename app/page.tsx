@@ -199,6 +199,18 @@ export default function Home() {
         @media (max-width: 768px) {
           body {
             overflow: hidden;
+            padding-top: 0px; /* 移除上边距，因为我们使用JS控制main边距 */
+          }
+          
+          header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 1000 !important;
+            padding: 0.75rem 1rem !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+            background-color: white !important;
           }
           
           .copilot-chat {
@@ -213,13 +225,15 @@ export default function Home() {
           }
           
           .copilot-chat-messages-container {
-            max-height: 55vh !important;
-            height: auto !important;
-            overflow-y: auto !important;
+            max-height: none !important; /* 移除最大高度限制 */
+            height: calc(65vh - 140px) !important; /* 聊天区域高度：70vh减去头部和输入框 */
+            overflow-y: scroll !important; /* 强制显示滚动条 */
             flex: 1 !important;
             -webkit-overflow-scrolling: touch !important;
             contain: content !important; /* 优化滚动性能 */
             will-change: transform !important; /* 硬件加速 */
+            overscroll-behavior: contain !important; /* 防止过度滚动 */
+            padding-bottom: 8px !important; /* 底部填充 */
           }
           
           .copilot-chat-input-container {
@@ -228,6 +242,8 @@ export default function Home() {
             bottom: 0 !important;
             width: 100% !important;
             flex-shrink: 0 !important;
+            background-color: #000000 !important; /* 确保输入框有背景色 */
+            z-index: 2 !important; /* 确保在消息上方 */
           }
           
           .copilot-chat-input {
@@ -242,17 +258,34 @@ export default function Home() {
             padding: 10px 12px !important;
             margin: 4px 0 !important;
           }
+          
+          /* 优化页脚在移动设备上的显示 */
+          footer {
+            padding: 0.5rem !important;
+          }
         }
       `}</style>
       
-      <div style={styles.container}>
-        <header style={styles.header}>
+      <div style={{
+        ...styles.container,
+        paddingTop: isMobile ? '60px' : '0' // 为固定标题栏腾出空间
+      }}>
+        <header style={{
+          ...styles.header,
+          position: isMobile ? 'fixed' : 'relative',
+          top: isMobile ? 0 : 'auto',
+          left: isMobile ? 0 : 'auto',
+          right: isMobile ? 0 : 'auto',
+          zIndex: isMobile ? 1000 : 'auto',
+        }}>
           <h1 style={styles.title}>MA-1 AI</h1>
         </header>
 
         <main style={{
           ...styles.main,
-          flexDirection: isMobile ? 'column' : 'row'
+          flexDirection: isMobile ? 'column' : 'row',
+          height: isMobile ? 'calc(100vh - 60px)' : 'calc(100vh - 120px)',
+          marginTop: isMobile ? '0' : '0'
         }}>
           {/* Chat interface */}
           <div style={{
@@ -260,9 +293,10 @@ export default function Home() {
             width: isMobile ? '100%' : '40%',
             borderRight: isMobile ? 'none' : '1px solid #eaeaea',
             borderBottom: isMobile ? '1px solid #eaeaea' : 'none',
-            height: isMobile ? '70vh' : 'auto',
-            minHeight: isMobile ? '400px' : 'auto',
-            overflow: 'hidden'
+            height: isMobile ? 'calc(70vh - 60px)' : 'auto',
+            minHeight: isMobile ? '350px' : 'auto',
+            overflow: 'hidden', // 隐藏外层溢出
+            position: 'relative' // 添加相对定位
           }}>
             {isLoading && (
               <div style={styles.loadingOverlay}>
@@ -281,7 +315,9 @@ export default function Home() {
               <div style={{
                 ...styles.chatContainer,
                 height: '100%',
-                overflow: 'hidden'
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden' // 容器不滚动，内部元素滚动
               }}>
                 <ClientCopilotChat
                   instructions="Send campaign requests to /api/campaign. For general chat, use /api/chat."
@@ -294,7 +330,7 @@ export default function Home() {
           <div style={{
             ...styles.workspaceColumn,
             width: isMobile ? '100%' : '60%',
-            height: isMobile ? '30vh' : 'auto',
+            height: isMobile ? 'calc(30vh)' : 'auto',
             overflow: 'auto'
           }}>
             <div style={styles.workspaceHeader}>
