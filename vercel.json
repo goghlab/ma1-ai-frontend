@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_COPILOT_API_KEY": "ck_pub_4ecb04ac2a37c735196d99b608b31919"
+  }
+} 
