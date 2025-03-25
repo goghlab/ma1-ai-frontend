@@ -3,24 +3,56 @@
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotChat } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
-import React from 'react';
+import React, { lazy, Suspense, memo, useState, useEffect } from 'react';
+
+// 懒加载组件
+const LazyChat = lazy(() => import("@copilotkit/react-ui").then(module => ({ default: module.CopilotChat })));
+
+// 加载指示器组件
+const LoadingIndicator = () => (
+  <div className="h-full w-full flex items-center justify-center bg-black text-white">
+    <div className="flex flex-col items-center">
+      <div className="w-16 h-16 relative">
+        <div className="absolute top-0 left-0 right-0 bottom-0 w-16 h-16 border-4 border-blue-500 border-solid rounded-full border-t-transparent animate-spin"></div>
+      </div>
+      <p className="mt-4 text-gray-300">正在加载 MA-1 AI...</p>
+    </div>
+  </div>
+);
 
 interface ClientCopilotChatProps {
   instructions?: string;
   botMessage?: string;
 }
 
-export default function ClientCopilotChat({ instructions, botMessage }: ClientCopilotChatProps) {
+// 使用memo记忆组件，减少不必要的重渲染
+const ClientCopilotChat = memo(function ClientCopilotChat({ instructions, botMessage }: ClientCopilotChatProps) {
   // 使用环境变量中的API密钥，或者在代码中直接使用
   const apiKey = process.env.NEXT_PUBLIC_COPILOT_API_KEY || "ck_pub_4ecb04ac2a37c735196d99b608b31919";
+  
+  // 添加页面载入状态
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  // 模拟延迟加载以减少首屏渲染时间
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   return (
     <div className="flex-1 h-full w-full flex flex-col bg-black">
       <div className="w-full h-full bg-black border border-gray-800 rounded-md overflow-hidden">
         <CopilotKit publicApiKey={apiKey}>
-          <CopilotChat 
-            className="h-full w-full"
-          />
+          {isLoaded ? (
+            <Suspense fallback={<LoadingIndicator />}>
+              <LazyChat className="h-full w-full" />
+            </Suspense>
+          ) : (
+            <LoadingIndicator />
+          )}
         </CopilotKit>
       </div>
       
@@ -68,6 +100,8 @@ export default function ClientCopilotChat({ instructions, botMessage }: ClientCo
         .copilot-chat-messages-container {
           background-color: #000000 !important;
           padding: 16px !important;
+          will-change: transform; /* 性能优化: 使用GPU加速 */
+          transform: translateZ(0); /* 性能优化: 强制GPU渲染 */
         }
         
         /* 用户消息气泡 */
@@ -189,6 +223,7 @@ export default function ClientCopilotChat({ instructions, botMessage }: ClientCo
             height: auto !important;
             max-height: 60vh !important;
             overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important; /* 性能优化: 流畅滚动 */
           }
           
           /* 工作面板（如有）显示在下方 */
@@ -210,6 +245,7 @@ export default function ClientCopilotChat({ instructions, botMessage }: ClientCo
           .copilot-chat-message-user,
           .copilot-chat-message-assistant {
             max-width: 90% !important;
+            contain: content !important; /* 性能优化: 隔离布局影响 */
           }
           
           /* 头部标题调整 */
@@ -242,7 +278,31 @@ export default function ClientCopilotChat({ instructions, botMessage }: ClientCo
             padding: 8px !important;
           }
         }
+        
+        /* 添加动画优化 */
+        @media (prefers-reduced-motion: no-preference) {
+          .copilot-chat-message-user,
+          .copilot-chat-message-assistant {
+            animation: fadeIn 0.3s ease-out;
+            opacity: 0;
+            animation-fill-mode: forwards;
+          }
+          
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        }
+
+        /* 兼容性支持 */
+        @supports not (backdrop-filter: blur(10px)) {
+          .copilot-chat-header {
+            background-color: rgba(0, 0, 0, 0.95) !important;
+          }
+        }
       `}</style>
     </div>
   );
-}
+});
+
+export default ClientCopilotChat;
