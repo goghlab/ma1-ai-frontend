@@ -201,17 +201,46 @@ export default function Home() {
             overflow: hidden;
           }
           
+          .copilot-chat {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100% !important;
+            overflow: hidden !important;
+          }
+          
+          .copilot-chat-header {
+            flex-shrink: 0 !important;
+          }
+          
           .copilot-chat-messages-container {
-            max-height: 30vh !important;
+            max-height: 55vh !important;
+            height: auto !important;
+            overflow-y: auto !important;
+            flex: 1 !important;
+            -webkit-overflow-scrolling: touch !important;
+            contain: content !important; /* 优化滚动性能 */
+            will-change: transform !important; /* 硬件加速 */
           }
           
           .copilot-chat-input-container {
             padding: 8px !important;
+            position: relative !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            flex-shrink: 0 !important;
           }
           
           .copilot-chat-input {
             max-height: 80px !important;
             overflow-y: auto !important;
+          }
+          
+          /* 改善聊天气泡在移动设备上的尺寸 */
+          .copilot-chat-message-user,
+          .copilot-chat-message-assistant {
+            max-width: 90% !important;
+            padding: 10px 12px !important;
+            margin: 4px 0 !important;
           }
         }
       `}</style>
@@ -231,8 +260,8 @@ export default function Home() {
             width: isMobile ? '100%' : '40%',
             borderRight: isMobile ? 'none' : '1px solid #eaeaea',
             borderBottom: isMobile ? '1px solid #eaeaea' : 'none',
-            height: isMobile ? '40vh' : 'auto',
-            minHeight: isMobile ? '300px' : 'auto',
+            height: isMobile ? '70vh' : 'auto',
+            minHeight: isMobile ? '400px' : 'auto',
             overflow: 'hidden'
           }}>
             {isLoading && (
@@ -251,7 +280,8 @@ export default function Home() {
             <CopilotKit runtimeUrl="http://localhost:3001/api">
               <div style={{
                 ...styles.chatContainer,
-                height: '100%'
+                height: '100%',
+                overflow: 'hidden'
               }}>
                 <ClientCopilotChat
                   instructions="Send campaign requests to /api/campaign. For general chat, use /api/chat."
@@ -264,7 +294,7 @@ export default function Home() {
           <div style={{
             ...styles.workspaceColumn,
             width: isMobile ? '100%' : '60%',
-            height: isMobile ? '60vh' : 'auto',
+            height: isMobile ? '30vh' : 'auto',
             overflow: 'auto'
           }}>
             <div style={styles.workspaceHeader}>
